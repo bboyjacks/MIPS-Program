@@ -56,8 +56,9 @@ get_operator:
     j validate_op
 
 validate_op:
-    beq     $t4, '+', get_second_input      # if operator is '+' then add $t1 and $t2 and store in $t0
-    beq		$t4, '-', get_second_input	    # if $t4 == '-' then target
+    # Validate all commands
+    beq     $t4, '+', get_second_input
+    beq		$t4, '-', get_second_input
     beq     $t4, '*', get_second_input
     beq     $t4, '/', get_second_input
     beq     $t4, '%', get_second_input
@@ -70,7 +71,7 @@ validate_op:
     j get_operator
 
 reset_first_val:
-    move    $t0, $zero          # result 
+    move    $t0, $zero          # code to reset result to zero
     j eval_cont
 
 get_second_input:
@@ -86,11 +87,11 @@ get_second_input:
 
 evaluate:
 
-    beq     $t4, '+', plus      # if operator is '+' then add $t1 and $t2 and store in $t0
-    beq		$t4, '-', minus	# if $t4 == '-' then target
-    beq     $t4, '*', multiply
-    beq     $t4, '/', divide
-    beq     $t4, '%', divide
+    beq     $t4, '+', plus      # if operator is '+' then plus
+    beq		$t4, '-', minus	    # if operator is '-' then minus
+    beq     $t4, '*', multiply  # if operator is '*' then minus
+    beq     $t4, '/', divide    # if operator is '/' then minus
+    beq     $t4, '%', divide    # if operator is '%' then minus
 
 eval_cont:
 
@@ -167,9 +168,3 @@ end_program:
     
     li $v0, 10                  # end program
     syscall
-    
-    
-    
-    
-    
-    
