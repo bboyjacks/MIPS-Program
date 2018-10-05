@@ -10,6 +10,7 @@
 int_str:            .asciiz "int: "
 op_str:             .asciiz "op: "
 goodbye_message:    .asciiz "Goodbye"
+overflow_message:   .asciiz "Overflow, state reset to 0.\n"
 input_op:           .space 4
 end_line:           .asciiz "\n"
 
@@ -21,6 +22,8 @@ main:
     # $t2 -> second value
     # $t3 -> operator address
     # $t4 -> operator char
+    # $t5 -> lo register
+    # $t6 -> hi register
 
     li		$v0, 4		        # code to print 'int: '
     la		$a0, int_str
@@ -63,6 +66,7 @@ evaluate:
 
     beq     $t4, '+', plus      # if operator is '+' then add $t1 and $t2 and store in $t0
     beq		$t4, '-', minus	# if $t4 == '-' then target
+    beq     $t4, '*', multiply
     
 
 eval_cont:
@@ -86,6 +90,25 @@ plus:
 
 minus:
     sub		$t0, $t1, $t2		# subtract the first from second value and store in $t0
+    j eval_cont
+
+multiply:
+    mult	$t1, $t2		    # multiply first value with second
+    mflo	$t5					# copy Lo to $t5
+    mfhi    $t6
+    beq     $t6, $zero, not_overflow
+    j multiply_overflow
+    
+not_overflow:
+    move    $t0, $t5
+    j eval_cont
+
+multiply_overflow:
+    move    $t0, $zero          # reset answer and print overflow error message
+    li      $v0, 4
+    la      $a0, overflow_message
+    syscall
+
     j eval_cont
 
 end_program:
