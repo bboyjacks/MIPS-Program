@@ -7,12 +7,13 @@
 
 .data
 
-int_str:            .asciiz "int: "
-op_str:             .asciiz "op: "
-goodbye_message:    .asciiz "Goodbye"
-overflow_message:   .asciiz "Overflow, state reset to 0.\n"
-input_op:           .space 4
-end_line:           .asciiz "\n"
+int_str:                    .asciiz "int: "
+op_str:                     .asciiz "op: "
+goodbye_message:            .asciiz "Goodbye"
+overflow_message:           .asciiz "Overflow, state reset to 0.\n"
+dividing_by_zero_message:   .asciiz "Attempting to divide by zero. Please enter a new divisor.\n"
+input_op:                   .space 4
+end_line:                   .asciiz "\n"
 
 .text
 
@@ -51,7 +52,9 @@ get_operator:
     lb		$t4, 0($t3)		    # get first byte of input_op
 
     beq		$t4, 'e', end_program	# if $t4 == 'e' then end_program
+    j get_second_input
 
+get_second_input:
     li      $v0, 4              # print 'int: ' again
     la      $a0, int_str
     syscall
@@ -67,6 +70,7 @@ evaluate:
     beq     $t4, '+', plus      # if operator is '+' then add $t1 and $t2 and store in $t0
     beq		$t4, '-', minus	# if $t4 == '-' then target
     beq     $t4, '*', multiply
+    beq     $t4, '/', divide
     
 
 eval_cont:
@@ -98,6 +102,22 @@ multiply:
     mfhi    $t6
     beq     $t6, $zero, not_overflow
     j multiply_overflow
+
+divide:
+    beq     $t2, $zero, dividing_by_zero
+    div     $t1, $t2            # divide the first with the second
+    mflo    $t5
+    move    $t0, $t5
+
+    j eval_cont
+
+dividing_by_zero:
+
+    li      $v0, 4              # print dividing by zero error
+    la      $a0, dividing_by_zero_message
+    syscall
+
+    j get_second_input
     
 not_overflow:
     move    $t0, $t5
