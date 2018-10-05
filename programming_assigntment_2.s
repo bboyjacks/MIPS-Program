@@ -62,12 +62,16 @@ get_operator:
 evaluate:
 
     beq     $t4, '+', plus      # if operator is '+' then add $t1 and $t2 and store in $t0
+    beq		$t4, '-', minus	# if $t4 == '-' then target
+    
 
 eval_cont:
 
     li      $v0, 1              # code to print evaluation result
     move    $a0, $t0
     syscall
+
+    move    $t1, $t0            # make the result the new $t1
 
     li      $v0, 4              # print end line
     la      $a0, end_line
@@ -76,7 +80,12 @@ eval_cont:
     j get_operator
 
 plus:
-    add     $t0, $t1, $t2
+
+    add     $t0, $t1, $t2       # add first and second value and store in $t0
+    j eval_cont
+
+minus:
+    sub		$t0, $t1, $t2		# subtract the first from second value and store in $t0
     j eval_cont
 
 end_program:
