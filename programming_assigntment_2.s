@@ -12,6 +12,7 @@ op_str:                     .asciiz "op: "
 goodbye_message:            .asciiz "Goodbye"
 overflow_message:           .asciiz "Overflow, state reset to 0.\n"
 dividing_by_zero_message:   .asciiz "Attempting to divide by zero. Please enter a new divisor.\n"
+illegal_operator_message:   .asciiz "Illegal operator, must be one of +, -, *, /, %, c, e. Please try again.\n"
 input_op:                   .space 4
 end_line:                   .asciiz "\n"
 
@@ -52,7 +53,25 @@ get_operator:
     lb		$t4, 0($t3)		    # get first byte of input_op
 
     beq		$t4, 'e', end_program	# if $t4 == 'e' then end_program
-    j get_second_input
+    j validate_op
+
+validate_op:
+    beq     $t4, '+', get_second_input      # if operator is '+' then add $t1 and $t2 and store in $t0
+    beq		$t4, '-', get_second_input	    # if $t4 == '-' then target
+    beq     $t4, '*', get_second_input
+    beq     $t4, '/', get_second_input
+    beq     $t4, '%', get_second_input
+    beq     $t4, 'c', reset_first_val
+    
+    li      $v0, 4              # print elegal operation
+    la      $a0, illegal_operator_message
+    syscall
+
+    j get_operator
+
+reset_first_val:
+    move    $t0, $zero          # result 
+    j eval_cont
 
 get_second_input:
     li      $v0, 4              # print 'int: ' again
@@ -71,7 +90,7 @@ evaluate:
     beq		$t4, '-', minus	# if $t4 == '-' then target
     beq     $t4, '*', multiply
     beq     $t4, '/', divide
-    
+    beq     $t4, '%', divide
 
 eval_cont:
 
@@ -106,7 +125,15 @@ multiply:
 divide:
     beq     $t2, $zero, dividing_by_zero
     div     $t1, $t2            # divide the first with the second
+    beq     $t4, '%', mod
+
     mflo    $t5
+    move    $t0, $t5
+
+    j eval_cont
+
+mod:
+    mfhi    $t5                 # mod
     move    $t0, $t5
 
     j eval_cont
